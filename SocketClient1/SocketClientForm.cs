@@ -14,8 +14,30 @@ namespace SocketClient1
         public SocketClientForm()
         {
             InitializeComponent();
+            fileStream = File.Open("F:\\ZhuJunjie\\SocketClient1\\SocketClient1\\MsgSendTable.txt", FileMode.Open);
+            streamReader = new StreamReader(fileStream);
+            timeInterval = 0.0f;
         }
         public static MySocketClient mySocketClient;
+
+        public FileStream fileStream;
+        public StreamReader streamReader;
+        public float timeInterval;
+        public List<float> timeList = new List<float>()
+        {
+            1.74f,
+            8.10f,
+            13.50f,
+            13.96f,
+            18.28f,
+            21.32f,
+            25.10f,
+            32.78f,
+            34.68f,
+            38.30f,
+            38.44f,
+        };
+        private int timeListIndex = 0;
         private delegate void showMsgDelegate(string str);
         private void showMsg(string str)
         {
@@ -40,22 +62,32 @@ namespace SocketClient1
 
             showMsg("连接成功！");
 
-            //开启一个自动发送信息的线程
-            Thread autoSendMsgThread = new Thread(SendMessage);
+            //开启一个自动发送信息的线程,50次/s
+            Thread autoSendMsgThread = new Thread(AutoSendMessage);
             autoSendMsgThread.IsBackground = true;
             autoSendMsgThread.Start();
         }
+
         //每次自动从txt文件中读取一行发送
-
-        void SendMessage()
+        void AutoSendMessage()
         {
-            //while (true)
-            //{
-            //    //StreamReader sr= File.Open("F:\\ZhuJunjie\\MSPIDemo\\Assets\\MsgSendTable.txt", FileMode.Open);
-
-            //    string msgSendStr = sr.ReadLine();
-            //    Thread.Sleep(10);
-            //}
+            while (true)
+            {
+                if (timeListIndex < timeList.Count && (timeInterval - timeList[timeListIndex]) <= 0.0001)
+                {
+                    string msgSendStr = streamReader.ReadLine();
+                    while (msgSendStr != "" && msgSendStr != null)
+                    {
+                        //发送一行消息
+                        mySocketClient.SendMessage(msgSendStr);
+                        showMsg(msgSendStr);
+                        timeListIndex++;
+                    }
+                }
+                timeInterval += 0.02f;
+                Console.WriteLine(timeInterval);
+                Thread.Sleep(20);
+            }
         }
         public void ShowMsg(string msg)
         {
@@ -79,15 +111,6 @@ namespace SocketClient1
                     Console.WriteLine(MySocketClient.socketSend.RemoteEndPoint + ":" + str);
                 }
                 catch { }
-            }
-        }
-        //向服务器发送信息
-        private void sendMsg_btn_Click(object sender, EventArgs e)
-        {
-            string msgSendStr = textBox_sendMsg.Text;
-            if (msgSendStr.Length > 0)
-            {
-                mySocketClient.SendMessage(msgSendStr);
             }
         }
         //string转list
@@ -119,7 +142,6 @@ namespace SocketClient1
                 showMsg("已断开socket连接！");
             }
         }
-
         private void clearReceive_btn_Click(object sender, EventArgs e)
         {
             if (textBox_receiveMsg.Text.Length > 0)
@@ -127,16 +149,6 @@ namespace SocketClient1
                 textBox_receiveMsg.Text = "";
             }
         }
-
-        private void clearSend_Click(object sender, EventArgs e)
-        {
-            if (textBox_sendMsg.Text.Length > 0)
-            {
-                textBox_sendMsg.Text = "";
-            }
-        }
-
-
         private void listBox_receiveMsg_SelectedIndexChanged(object sender, EventArgs e)
         {
 
@@ -162,5 +174,10 @@ namespace SocketClient1
         {
 
         }
+        private void SocketClientForm_Load(object sender, EventArgs e)
+        {
+
+        }
+        
     }
 }
