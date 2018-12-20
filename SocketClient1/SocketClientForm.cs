@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -23,21 +19,6 @@ namespace SocketClient1
         public FileStream fileStream;
         public StreamReader streamReader;
         public float timeInterval;
-        public List<float> timeList = new List<float>()
-        {
-            1.74f,
-            8.10f,
-            13.50f,
-            13.96f,
-            18.28f,
-            21.32f,
-            25.10f,
-            32.78f,
-            34.68f,
-            38.30f,
-            38.44f,
-        };
-        private int timeListIndex = 0;
         private delegate void showMsgDelegate(string str);
         private void showMsg(string str)
         {
@@ -60,29 +41,49 @@ namespace SocketClient1
             listenReceiveThread.IsBackground = true;//允许在后台运行
             listenReceiveThread.Start();
 
-            showMsg("连接成功！");
-
             //开启一个自动发送信息的线程,50次/s
-            Thread autoSendMsgThread = new Thread(AutoSendMessage);
-            autoSendMsgThread.IsBackground = true;
-            autoSendMsgThread.Start();
+            //Thread autoSendMsgThread = new Thread(AutoSendMessage);
+            //autoSendMsgThread.IsBackground = true;
+            //autoSendMsgThread.Start();
+            System.Timers.Timer t = new System.Timers.Timer(2000);//实例化Timer类，设置间隔时间为2000毫秒；
+            t.Elapsed += new System.Timers.ElapsedEventHandler(sendAMsg);//到达时间的时候执行事件；
+            t.AutoReset = false;//设置是执行一次（false）还是一直执行(true)；
+            t.Enabled = true;//是否执行System.Timers.Timer.Elapsed事件；
         }
+        //测试：一秒之后直接发一条信息
+        public void sendAMsg(object source, System.Timers.ElapsedEventArgs e)
+        {
+            //场景1
+            //string msgSendStr = "Null,Null,Null,Null,CargoFirst|5_6$412$7_8$412$9_10$1$12_13_14$103$15_22$1_1_1_A$|1,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null";//测试1
+        
+            //string msgSendStr = "Null,Null,Null,Null,Null,Null,CargoFirst|7_8$412$9_10$1$12_13_14$103$15_22$1_1_1_A$|1,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null";//测试2
+            string msgSendStr = "Null,Null,Null,CargoFirst|4_5_6$112$8_9$1_1_1_A$|1,Null,Null,Null,Null,Null";//场景2
+            mySocketClient.SendMessage(msgSendStr);
+            showMsg(msgSendStr);
+        }
+
 
         //每次自动从txt文件中读取一行发送
         void AutoSendMessage()
         {
             while (true)
             {
-                if (timeListIndex < timeList.Count && (timeInterval - timeList[timeListIndex]) <= 0.0001)
+                //if (timeListIndex < timeList.Count && (timeInterval - timeList[timeListIndex]) <= 0.0001)
+                //{
+                //    string msgSendStr = streamReader.ReadLine();
+                //    while (msgSendStr != "" && msgSendStr != null)
+                //    {
+                //        //发送一行消息
+                //        mySocketClient.SendMessage(msgSendStr);
+                //        showMsg(msgSendStr);
+                //        timeListIndex++;
+                //    }
+                //}
+                if (timeInterval - 1.0f <= 0.001f)
                 {
-                    string msgSendStr = streamReader.ReadLine();
-                    while (msgSendStr != "" && msgSendStr != null)
-                    {
-                        //发送一行消息
-                        mySocketClient.SendMessage(msgSendStr);
-                        showMsg(msgSendStr);
-                        timeListIndex++;
-                    }
+                    string msgSendStr = "Null,Null,Null,Null,1_4$112$5_6$412$7_8$412$9_10$1$12_13_14$103$15_22$1_1_1_A$|5_6$412$7_8$412$9_10$1$12_13_14$103$15_22$1_1_1_A$|1,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,";
+                    mySocketClient.SendMessage(msgSendStr);
+                    showMsg(msgSendStr);
                 }
                 timeInterval += 0.02f;
                 Console.WriteLine(timeInterval);

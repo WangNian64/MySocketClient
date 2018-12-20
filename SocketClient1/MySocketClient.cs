@@ -41,13 +41,15 @@ namespace SocketClient1
                     socketSend = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     IPAddress ip = IPAddress.Parse(ipStr);
                     //得到远程的IP和Port
-                    IPEndPoint point = new IPEndPoint(ip, Convert.ToInt32(port));
+                    IPEndPoint point = new IPEndPoint(ip, port);
                     //连接远程的服务器端Socket
                     socketSend.Connect(point);
+                    Console.WriteLine("连接成功！");
                     isConnected = true;
                 }
-                catch (Exception)
+                catch (SocketException se)
                 {
+                    se.ToString();
                     Console.WriteLine("IP或者端口错误");
                 }
             }
@@ -55,18 +57,18 @@ namespace SocketClient1
         //发送信息到socket服务器
         public void SendMessage(string msgSendStr)
         {
-            //信息格式：设备号,货物名|设备号,货物名|...（发送时即表示此时 该设备上的传感器感应到货物）
             if (isConnected == true && socketSend != null)
             {
                 try
                 {
+                    Console.WriteLine(msgSendStr);
                     ////先进行序列化，存储到内存空间中
                     //MemoryStream ms = new MemoryStream();
                     //BinaryFormatter bf = new BinaryFormatter();
                     //bf.Serialize(ms, msgSendList);
                     ////发送
                     //socketSend.Send(ms.ToArray());
-                    byte[] msgBytes = new byte[msgSendStr.Length * 4];
+                    byte[] msgBytes = new byte[msgSendStr.Length * 5];
                     msgBytes = Encoding.UTF8.GetBytes(msgSendStr);
                     socketSend.Send(msgBytes);
                 }
